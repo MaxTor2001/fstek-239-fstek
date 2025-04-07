@@ -3,15 +3,12 @@ import os
 from tkinter import messagebox
 from PIL import Image, ImageTk
 
-# Assuming these dictionaries are defined elsewhere
 from ubi_fstec import threats
 from comparison_ubi import threats1
 from security_239 import information_security_measures, measures1, measures2, measures3
 
-# Set for collecting unique security measures
 unique_measures = set()
 
-# Define the order for sorting
 order = [
     "IAF.0",
     "IAF.1",
@@ -41,22 +38,17 @@ order = [
 def save_results():
     selected_threats = [threat for threat, var in checkboxes.items() if var.get() == 1]
     with open("result.txt", "w", encoding="utf-8") as file:
-        for key, value in threats1.items():  # Iterate over threats1 dictionary
-            if key in selected_threats and value:  # Check selected threat
+        for key, value in threats1.items():
+            if key in selected_threats and value:
                 threats_list = value.split(",")
-                if key in threats:  # Check existence in threats
-                    threat_value = threats[key]  # Get value from the threats dictionary
-                    file.write(f"{key}: {threat_value}:\n")  # Output both values
+                if key in threats:
+                    threat_value = threats[key]
+                    file.write(f"{key}: {threat_value}:\n")
                 for threat in threats_list:
                     if threat in information_security_measures:
-                        unique_measures.add(
-                            information_security_measures[threat]
-                        )  # Collect unique measures
-                        file.write(
-                            f"  - {information_security_measures[threat]}\n"
-                        )  # Write measure
+                        unique_measures.add(information_security_measures[threat])
+                        file.write(f"  - {information_security_measures[threat]}\n")
 
-        # Write unique security measures sorted according to 'order'
         file.write("\nНеобходимо реализовать следующие меры ИБ:\n")
         sorted_measures = sorted(
             unique_measures,
@@ -65,7 +57,6 @@ def save_results():
         for measure in sorted_measures:
             file.write(f"  - {measure}\n")
 
-        # Check measures for each category
         for i, measures in enumerate([measures1, measures2, measures3], start=1):
             file.write(
                 f"\nДля реализации требований ИБ по {i}-ой категории не хватает следующих мер ИБ:\n"
@@ -82,19 +73,17 @@ def select_all():
         var.set(1)  # Check all
 
 
-# Initialize Tkinter window
 root = tk.Tk()
 photo = tk.PhotoImage(file="bezopasnost.png")
 root.iconphoto(False, photo)
 root.title("Реализация УБИ мерами 239 приказа ФСТЭК")
-root.geometry("800x600+250+250")
+root.geometry("1200x600+250+250")
 root.config(bg="#808080")
 root.resizable(False, False)
 
 print("Current Working Directory:", os.getcwd())
 
 
-# Create a canvas for scrolling
 frame = tk.Frame(root)
 frame.pack(fill=tk.BOTH, expand=True)
 canvas = tk.Canvas(frame)
@@ -110,52 +99,39 @@ scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
 canvas.configure(yscrollcommand=scrollbar.set)
 
-# Create checkboxes for the threats
-checkboxes = {}  # Initialize checkboxes dictionary
+checkboxes = {}
 
 
-def wrap_text(text, max_length=80):
+def wrap_text(text, max_length=220):
     """Wraps the text to ensure lines do not exceed max_length and are left-aligned."""
     if len(text) <= max_length:
         return text
     else:
-        # Split the text into words and construct lines
         lines = []
         words = text.split(" ")
         current_line = ""
 
         for word in words:
             if len(current_line) + len(word) + (1 if current_line else 0) <= max_length:
-                # If the current line can accommodate the word, add it
-                current_line += (
-                    " " + word if current_line else word
-                )  # Add with a space only if not empty
+                current_line += " " + word if current_line else word
             else:
-                # If the line is too long, start a new line
-                lines.append(
-                    current_line
-                )  # Add the current line without leading spaces
-                current_line = word  # Start a new current_line with the next word
+                lines.append(current_line)
+                current_line = word
 
-        if current_line:  # Add any remaining text
-            lines.append(current_line)  # Add the final line
+        if current_line:
+            lines.append(current_line)
 
-        return "\n".join(lines)  # Join lines with newline characters
+        return "\n".join(lines)
 
 
-# Assuming threats is a dictionary where keys are threat names and values are their descriptions or values
-for threat, value in threats.items():  # Use items() to get both key and value
-    var = tk.IntVar()  # Create an IntVar for each threat
-    checkboxes[threat] = var  # Store the IntVar in the checkboxes dictionary
+for threat, value in threats.items():
+    var = tk.IntVar()
+    checkboxes[threat] = var
 
-    # Combine threat and value, then wrap text
-    display_text = wrap_text(f"{threat}: {value}")  # Wrap the text if too long
-    cb = tk.Checkbutton(
-        scrollable_frame, text=display_text, variable=var
-    )  # Display the wrapped text
-    cb.pack(anchor="w")  # Pack the Checkbutton into the UI
+    display_text = wrap_text(f"{threat}: {value}")
+    cb = tk.Checkbutton(scrollable_frame, text=display_text, variable=var)
+    cb.pack(anchor="w")
 
-# Create buttons
 select_all_button = tk.Button(root, text="Выбрать все 222 УБИ", command=select_all)
 select_all_button.pack(pady=5)
 
