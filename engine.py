@@ -1,11 +1,11 @@
 import tkinter as tk
 import os
 from tkinter import messagebox
-from PIL import Image, ImageTk
 
 from ubi_fstec import threats
 from comparison_ubi import threats1
 from security_239 import information_security_measures, measures1, measures2, measures3
+from PIL import Image, ImageTk
 
 unique_measures = set()
 
@@ -34,111 +34,120 @@ order = [
     "ZSV",
 ]
 
-
 def save_results():
-    selected_threats = [threat for threat, var in checkboxes.items() if var.get() == 1]
-    with open("result.txt", "w", encoding="utf-8") as file:
-        for key, value in threats1.items():
-            if key in selected_threats and value:
-                threats_list = value.split(",")
+    selected = [t for t, v in checkboxes.items() if v.get()]
+    with open("result.txt", "w", encoding="utf-8") as f:
+        for key, val in threats1.items():
+            if key in selected and val:
+                parts = val.split(",")
                 if key in threats:
-                    threat_value = threats[key]
-                    file.write(f"{key}: {threat_value}:\n")
-                for threat in threats_list:
-                    if threat in information_security_measures:
-                        unique_measures.add(information_security_measures[threat])
-                        file.write(f"  - {information_security_measures[threat]}\n")
+                    f.write(f"{key}: {threats[key]}:\n")
+                for p in parts:
+                    if p in information_security_measures:
+                        unique_measures.add(information_security_measures[p])
+                        f.write(f"  - {information_security_measures[p]}\n")
 
-        file.write("\nНеобходимо реализовать следующие меры ИБ:\n")
+        f.write("\nНеобходимо реализовать следующие меры ИБ:\n")
         sorted_measures = sorted(
             unique_measures,
             key=lambda x: order.index(x) if x in order else float("inf"),
         )
-        for measure in sorted_measures:
-            file.write(f"  - {measure}\n")
+        for m in sorted_measures:
+            f.write(f"  - {m}\n")
 
-        for i, measures in enumerate([measures1, measures2, measures3], start=1):
-            file.write(
+        for i, meas in enumerate((measures1, measures2, measures3), 1):
+            f.write(
                 f"\nДля реализации требований ИБ по {i}-ой категории не хватает следующих мер ИБ:\n"
             )
-            for measure in measures.values():
-                if measure not in unique_measures:
-                    file.write(f"  - {measure}\n")
+            for m in meas.values():
+                if m not in unique_measures:
+                    f.write(f"  - {m}\n")
 
     messagebox.showinfo("Success", "Results saved to result.txt")
 
 
 def select_all():
     for var in checkboxes.values():
-        var.set(1)  # Check all
+        var.set(1)
 
 
 root = tk.Tk()
-photo = tk.PhotoImage(file="bezopasnost.png")
-root.iconphoto(False, photo)
 root.title("Реализация УБИ мерами 239 приказа ФСТЭК")
-root.geometry("1200x600+250+250")
-root.config(bg="#808080")
+root.geometry("1050x600+250+250")
+UNIFORM_BG = "#E8F5E9"  # Светло-зеленый
+root.config(bg=UNIFORM_BG)
 root.resizable(False, False)
 
-print("Current Working Directory:", os.getcwd())
 
+outer = tk.Frame(root, bg="#FFEBEE")  # Светло-розовый
+outer.pack(fill="both", expand=True)
 
-frame = tk.Frame(root)
-frame.pack(fill=tk.BOTH, expand=True)
-canvas = tk.Canvas(frame)
-scrollbar = tk.Scrollbar(frame, orient="vertical", command=canvas.yview)
-scrollable_frame = tk.Frame(canvas)
+canvas = tk.Canvas(outer, bg="#E0E0E0", highlightthickness=0)  # Светло-серый
+scrollbar = tk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+scrollable = tk.Frame(canvas, bg="#E0E0E0")
 
-scrollable_frame.bind(
+scrollable.bind(
     "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
 )
-canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+canvas.create_window((0, 0), window=scrollable, anchor="nw")
 canvas.configure(yscrollcommand=scrollbar.set)
+
+canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
 
 checkboxes = {}
 
 
 def wrap_text(text, max_length=220):
-    """Wraps the text to ensure lines do not exceed max_length and are left-aligned."""
     if len(text) <= max_length:
         return text
-    else:
-        lines = []
-        words = text.split(" ")
-        current_line = ""
-
-        for word in words:
-            if len(current_line) + len(word) + (1 if current_line else 0) <= max_length:
-                current_line += " " + word if current_line else word
-            else:
-                lines.append(current_line)
-                current_line = word
-
-        if current_line:
-            lines.append(current_line)
-
-        return "\n".join(lines)
+    words = text.split()
+    lines, cur = [], ""
+    for w in words:
+        if len(cur) + len(w) + (1 if cur else 0) <= max_length:
+            cur += (" " + w) if cur else w
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return "\n".join(lines)
 
 
-for threat, value in threats.items():
+for threat, val in threats.items():
     var = tk.IntVar()
     checkboxes[threat] = var
+    text = wrap_text(f"{threat}: {val}")
+    cb = tk.Checkbutton(
+        scrollable,
+        text=text,
+        variable=var,
+        bg="#E8F5E9",  # Светло-зеленый
+        activebackground="#FFCDD2",  # Светло-красный
+        selectcolor="#FFAB91",  # Персиковый
+        anchor="w",
+        justify="left",
+        wraplength=1000,
+    )
+    cb.pack(fill="x", padx=5, pady=1)
 
-    display_text = wrap_text(f"{threat}: {value}")
-    cb = tk.Checkbutton(scrollable_frame, text=display_text, variable=var)
-    cb.pack(anchor="w")
+btns = tk.Frame(root, bg="#FFF3E0")  # Светло-оранжевый
+btns.pack(fill="x", pady=5)
 
-select_all_button = tk.Button(root, text="Выбрать все 222 УБИ", command=select_all)
-select_all_button.pack(pady=5)
-
-
-save_button = tk.Button(
-    root, text="Сохранить результаты в текущем каталоге", command=save_results
-)
-save_button.pack(pady=10)
+tk.Button(
+    btns,
+    text="Выбрать все 222 УБИ",
+    command=select_all,
+    bg="#BCAAA4",  # Светло-коричневый
+    activebackground="#FFCCBC",  # Светло-оранжевый
+).pack(side="left", padx=20)
+tk.Button(
+    btns,
+    text="Сохранить результаты в текущем каталоге",
+    command=save_results,
+    bg="#BCAAA4",  # Светло-коричневый
+    activebackground="#FFCCBC",  # Светло-оранжевый
+).pack(side="right", padx=20)
 
 root.mainloop()

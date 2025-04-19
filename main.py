@@ -1,6 +1,8 @@
-def main():
+def greet_user():
     print("Hello from fstek-239-fstek!")
 
 
 if __name__ == "__main__":
-    main()
+    greet_user()
+
+import engine
